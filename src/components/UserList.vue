@@ -13,10 +13,10 @@ const props = withDefaults(defineProps<Props>(), {
 </script>
 
 <template>
-  <a-list :grid="{ gutter: 16, column: 4 }" :data-source="props.userList">
+  <a-list :grid="{ gutter: 16, xs: 1, sm: 2, md: 4, lg: 4, xl: 6, xxl: 3 }" :data-source="props.userList">
     <template #renderItem="{ item }">
       <a-list-item>
-        <a-card hoverable style="width: 240px">
+        <a-card hoverable>
           <template #cover>
             <img alt="example" :src="logo"/>
           </template>
