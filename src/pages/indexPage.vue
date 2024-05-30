@@ -1,7 +1,7 @@
 <template>
   <div class="index-page">
     <a-input-search
-        v-model:value="searchParam.text"
+        v-model:value="searchText"
         placeholder="input search text"
         enter-button="Search"
         size="large"
@@ -25,10 +25,12 @@ import PictureList from '@/components/PictureList.vue';
 import MyDivider from '@/components/MyDivider.vue';
 import {useRoute, useRouter} from 'vue-router';
 import myAxios from '@/plugins/axios';
+import {message} from 'ant-design-vue';
 
 const router = useRouter();
 const route = useRoute();
 const activeKey = route.params.category;
+const searchText = ref(route.query.text || '');
 
 /**
  * 加载数据
@@ -60,7 +62,11 @@ const loadDataOld = (params: any) => {
   })
 }
 
-const loadData = (params: any) => {
+/**
+ * 加载聚合数据
+ * @param params
+ */
+const loadAllData = (params: any) => {
   const query = {
     ...params,
     searchText: params.text,
@@ -72,7 +78,33 @@ const loadData = (params: any) => {
   })
 }
 
+/**
+ * 加载单类数据
+ * @param params
+ */
+const loadData = (params: any) => {
+  const {type} = params;
+  if (! type) {
+    message.error('类别为空');
+    return;
+  }
+  const query = {
+    ...params,
+    searchText: params.text,
+  }
+  myAxios.post('search/all', query).then(res => {
+    if (type === 'post') {
+      postList.value = res.dataList;
+    } else if (type === 'user') {
+      userList.value = res.dataList;
+    } else if (type === 'picture') {
+      pictureList.value = res.dataList;
+    }
+  })
+}
+
 const initSearchParam = {
+  type: activeKey,
   text: '',
   pageSize: 10,
   pageNum: 1,
@@ -86,16 +118,19 @@ const pictureList = ref([]);
 watchEffect(() => {
   searchParam.value = {
     ...initSearchParam,
-    text: route.query.text
-  };
-})
+    text: route.query.text,
+    type: route.params.category,
+  } as any;
+  loadData(searchParam.value)
+});
 
 const onSearch = (value: string) => {
-  console.log(value);
   router.push({
-    query: searchParam.value,
+    query: {
+      ...searchParam.value,
+      text: value,
+    },
   });
-  loadData(searchParam.value)
 };
 
 const onTabChange = (key: string) => {
@@ -104,8 +139,5 @@ const onTabChange = (key: string) => {
     query: searchParam.value,
   })
 };
-
-// 首次请求
-loadData(initSearchParam);
 
 </script>
